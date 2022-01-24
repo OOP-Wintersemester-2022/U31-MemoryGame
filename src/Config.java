@@ -19,7 +19,7 @@ public class Config {
 
     // Score
     public static final Color SCORE_FONT_COLOR = new Color(0,0,0);
-    public static final int SCORE_FONTSIZE = 24;
+    public static final int SCORE_FONTSIZE = 22;
     public static final String SCORE_MESSAGE_PRE = "You completed Memory with ";
     public static final String SCORE_MESSAGE_POST = " comparisons!";
 
