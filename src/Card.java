@@ -1,53 +1,35 @@
 import java.io.File;
 
 public class Card {
-    private int xPos;
-    private int yPos;
-    private int width;
-    private int height;
+    private File imageFile;
+    private boolean solved;
 
-    private String imagePath;
-    private int evaluationNumber;
-
-    public Card(int x, int y, int width, int height) {
-        this.xPos = x;
-        this.yPos = y;
-        this.width = width;
-        this.height = height;
-
-        this.evaluationNumber = -1;
-        this.imagePath = "";
+    public Card(File imageFile) {
+        this.imageFile = imageFile;
+        solved = false;
     }
 
-    public int getX() {
-        return xPos;
+    public void setSolved(){
+        solved = true;
     }
 
-    public int getY() {
-        return yPos;
+    public boolean isSolved(){
+        return solved;
     }
 
-    public int getWidth() {
-        return width;
+    public File getImageFile(){
+        return imageFile;
     }
 
-    public int getHeight() {
-        return height;
-    }
-
-    public int getEvaluationNumber() {
-        return evaluationNumber;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setEvaluationNumber(int evaluationNumber) {
-        this.evaluationNumber = evaluationNumber;
-    }
-
-    public void setImage(String imagePath) {
-        this.imagePath = imagePath;
+    /**
+     * Zwei Karten sind dann gleich, wenn ihr Image das gleiche ist.
+     * @param cardToCompare
+     * @return cards have equal images
+     */
+    public boolean equals(Card cardToCompare) {
+        if(imageFile.equals(cardToCompare.getImageFile())){
+            return true;
+        }
+        return false;
     }
 }

@@ -2,81 +2,134 @@ import java.util.ArrayList;
 
 public class BoardView {
     private Board board;
-    private ArrayList<CardView> cardViews;
+    private CardView[][] cardViews;
     private ScoreView scoreView;
 
     private int numClickedCards;
 
     public BoardView(Board board) {
-        this.cardViews = new ArrayList<CardView>();
         this.board = board;
-        this.scoreView = new ScoreView(board.getScore(), board.getWidth(), board.getHeight());
-        this.numClickedCards = 0;
+        numClickedCards = 0;
+        initViews();
+    }
 
-        for (Card card : board.getCards()) {
-            cardViews.add(new CardView(card));
+    /**
+     * Der Score und das Gitter an Memory-Karten wird erstellt.
+     */
+    private void initViews(){
+        scoreView = new ScoreView(board.getScore());
+        cardViews = new CardView[Config.NUM_CARD_ROWS][Config.CARDS_PER_ROW];
+
+        int numCardsCreated = 0;
+        for (int i = 0; i < cardViews.length; i++) {
+            for (int j = 0; j < cardViews[i].length; j++) {
+                Card currentCard = board.getCards().get(numCardsCreated);
+                int cardX = Config.BOARD_MARGIN_TO_CARDS + (i * (Config.CARD_WIDTH + Config.BOARD_MARGIN_BETWEEN_CARDS));
+                int cardY = Config.BOARD_MARGIN_TO_CARDS + (j * (Config.CARD_HEIGHT + Config.BOARD_MARGIN_BETWEEN_CARDS));
+                cardViews[i][j] = new CardView(currentCard, cardX, cardY);
+                numCardsCreated ++;
+            }
         }
     }
 
+    /**
+     * Solange das Spiel noch nicht vorbei ist, werden alle Karten gezeichnet.
+     * Wenn das Spiel vorbei ist, wird der erzielte Score angezeigt.
+     */
     public void draw() {
-        for (CardView view : cardViews) {
-            view.draw();
+        for (CardView[] row : cardViews) {
+            for (CardView cardView : row) {
+                cardView.draw();
+            }
         }
-
-        if (board.isGameOver(cardViews)) {
-            scoreView.setScore(board.getScore().getNumEvaluations());
+        if (board.isGameOver()) {
+            scoreView.setScore();
             scoreView.draw();
         }
     }
 
+    /**
+     * Registriert einen Klick und handelt je nach Anzahl vorangegangener Klicks:
+     * Sind bereits zwei Karten aufgedeckt worden, werden alle Karten wieder verdeckt.
+     * Ansonsten wird der Klick auf eine Karte verarbeitet.
+     * @param x xPos des Klicks
+     * @param y yPos des Klicks
+     */
     public void onClick(int x, int y) {
         if(numClickedCards == 2) {
             hideRevealedCards();
         } else {
             handleCardClick(x, y);
+        }
+    }
 
-            if(numClickedCards == 2) {
-                evaluateRevealedCards();
+    /**
+     * Alle Karten werden wieder umgedreht.
+     */
+    private void hideRevealedCards() {
+        numClickedCards = 0;
+        for (CardView[] row : cardViews) {
+            for (CardView cardView : row) {
+                cardView.setRevealed(false);
             }
         }
     }
 
-    private void hideRevealedCards() {
-        numClickedCards = 0;
-
-        for (CardView view : cardViews) {
-            view.setToggle(false);
-        }
-    }
-
+    /**
+     * Die geklickte Karte wird umgedreht.
+     * War bereits eine Karte umgedreht, wird überprüft, ob ein Paar gefunden wurde.
+     * Nach jedem Versuch, wird das Board beauftragt, den Score hochzuzählen.
+     * @param x xPos des Klicks
+     * @param y yPos des Klicks
+     */
     private void handleCardClick(int x, int y) {
-        for (CardView view : cardViews) {
-            if (view.hitTest(x, y)) {
-                if(!view.isToggled()) {
-                    view.onClick();
+        for (CardView[] row : cardViews) {
+            for (CardView cardView : row) {
+                if (cardView.hitTest(x, y)) {
+                    cardView.flip();
                     numClickedCards++;
                 }
             }
         }
+        if(numClickedCards == 2) {
+            performPairCheck();
+            board.increaseScore();
+        }
     }
 
-    private void evaluateRevealedCards() {
-        ArrayList<CardView> cardsToEvaluate = new ArrayList<CardView>();
+    /**
+     * Wurde ein Paar gefunden, werden die zugehörigen Karten aus dem Spiel genommen.
+     * Die Anzahl der geklickten Karten wird zurückgesetzt.
+     */
+    private void performPairCheck() {
+        ArrayList<CardView> cardsToCheck = getRevealedCards();
 
-        for (CardView view : cardViews) {
-            if(view.isToggled()) {
-                cardsToEvaluate.add(view);
+        if(cardsToCheck.size() == 2){
+            Card firstRevealedCard = cardsToCheck.get(0).getCard();
+            Card secondRevealedCard = cardsToCheck.get(1).getCard();
+            if(board.isPair(firstRevealedCard, secondRevealedCard)){
+                board.solvePair(firstRevealedCard, secondRevealedCard);
+                cardsToCheck.get(0).solveCard();
+                cardsToCheck.get(1).solveCard();
+                numClickedCards = 0;
             }
         }
 
-        if(board.evaluateRevealedCards(cardsToEvaluate)) {
-            cardsToEvaluate.get(0).setClickable(false);
-            cardsToEvaluate.get(1).setClickable(false);
-            numClickedCards = 0;
+    }
 
-            for (CardView view : cardViews) {
-                view.setToggle(false);
+    /**
+     * Findet alle Karten, die gerade aufgedeckt am Spielbrett liegen.
+     * @return ArrayList of revealed CardViews
+     */
+    private ArrayList<CardView> getRevealedCards() {
+        ArrayList<CardView> revealedCards = new ArrayList<>();
+        for (CardView[] row : cardViews) {
+            for (CardView cardView : row) {
+                if (cardView.isRevealed()) {
+                    revealedCards.add(cardView);
+                }
             }
         }
+        return revealedCards;
     }
 }

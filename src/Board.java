@@ -1,90 +1,78 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class Board  {
+
     private ArrayList<Card> cards;
     private Score score;
-    private int width;
-    private int height;
+    private File[] files;
 
-    public Board(int numRows, int numCardsInRow, int app_width, int app_height) {
+    public Board() {
         score = new Score();
-        width = app_width;
-        height = app_height;
-
-        File[] files = retrieveAssets();
-        ArrayList<Integer> evaluationNumbers = randomizeBoard(files.length);
-
-        setupCards(numRows, numCardsInRow);
-        assignValuesToCards(files, evaluationNumbers);
+        retrieveAssets();
+        setupCards();
     }
 
-    private void assignValuesToCards(File[] files, ArrayList<Integer> evaluationNumbers) {
-        for (int i = 0; i < cards.size() && cards.size() == evaluationNumbers.size(); i++) {
-            cards.get(i).setEvaluationNumber(evaluationNumbers.get(i));
-            cards.get(i).setImage(files[evaluationNumbers.get(i)].getAbsolutePath());
-        }
-    }
+    private void retrieveAssets() {
+        files = new File(Config.BOARD_ASSET_PATH).listFiles();
 
-    private ArrayList<Integer> randomizeBoard(int numFiles) {
-        ArrayList<Integer> evaluationNumbers = new ArrayList<Integer>();
-
-        Random random = new Random();
-
-        while (evaluationNumbers.size() < Config.CARDS_PER_ROW * Config.NUM_CARD_ROWS) {
-            int num = random.nextInt(numFiles);
-
-            if (evaluationNumbers.stream().filter(number -> num == number).count() < 2) {
-                evaluationNumbers.add(num);
-            }
-        }
-
-        return evaluationNumbers;
-    }
-
-    private File[] retrieveAssets() {
-        File[] files = new File(Config.BOARD_ASSET_PATH).listFiles();
-
+        // Ist Anzahl der Files passend zur Anzahl der Karten?
         int numFiles = files.length;
-
         if (numFiles != Config.CARDS_PER_ROW * Config.NUM_CARD_ROWS / 2) {
             System.exit(0);
         }
-
-        return files;
     }
 
-    private void setupCards(int numRows, int numCardsInRow) {
-        cards = new ArrayList<Card>();
-
-        for (int i = 0; i < numRows; i++) {
-            int y = Config.BOARD_MARGIN_TO_CARDS + i * (Config.CARD_HEIGHT + Config.BOARD_MARGIN_BETWEEN_CARDS);
-
-            for (int k = 0; k < numCardsInRow; k++) {
-                int x = Config.BOARD_MARGIN_TO_CARDS + k * (Config.CARD_WIDTH + Config.BOARD_MARGIN_BETWEEN_CARDS);
-
-                cards.add(new Card(x, y, Config.CARD_WIDTH, Config.CARD_HEIGHT));
-            }
+    private void setupCards() {
+        cards = new ArrayList<>();
+        for(File file : files){
+            cards.add(new Card(file));
+            cards.add(new Card(file));
         }
+        shuffle();
     }
 
-    public ArrayList<Card> getCards() {
-        return cards;
+    /**
+     * Randomisiert die Reihenfolge der Karten in der ArrayList,
+     * damit diese später zufällig auf dem Spielbrett verteilt werden.
+     */
+    private void shuffle() {
+        // Alternativ: Collections.shuffle(cards);
+        ArrayList<Card> result = new ArrayList<>();
+        Random random = new Random();
+        for(int i = 0; i < Config.CARDS_PER_ROW*Config.NUM_CARD_ROWS; i++){
+            int randomIndex = random.nextInt(cards.size());
+            Card randomCard = cards.get(randomIndex);
+            result.add(randomCard);
+            cards.remove(randomCard);
+        }
+        cards = result;
     }
 
-    public boolean evaluateRevealedCards(ArrayList<CardView> cardsToEvaluate) {
+    public void increaseScore(){
         score.incrementNumEvaluations();
-        return cardsToEvaluate.get(0).getCard().getEvaluationNumber() == cardsToEvaluate.get(1).getCard().getEvaluationNumber();
     }
 
-    public boolean isGameOver(ArrayList<CardView> cardViews) {
-        for(CardView view: cardViews) {
-            if(view.isClickable()) {
+    public boolean isPair(Card card1, Card card2){
+        if(card1.equals(card2)){
+            return true;
+        }
+        return false;
+    }
+
+    public void solvePair(Card firstSolvedCard, Card secondSolvedCard){
+        firstSolvedCard.setSolved();
+        secondSolvedCard.setSolved();
+    }
+
+    public boolean isGameOver() {
+        for(Card card: cards) {
+            if(!card.isSolved()){
                 return false;
             }
         }
-
         return true;
     }
 
@@ -92,11 +80,7 @@ public class Board  {
         return score;
     }
 
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
+    public ArrayList<Card> getCards() {
+        return cards;
     }
 }

@@ -4,67 +4,61 @@ import de.ur.mi.oop.graphics.Rectangle;
 public class CardView {
     private Card card;
 
-    private Image imageView;
-    private Rectangle rectangleView;
+    private Image foreground;
+    private Rectangle background;
 
-    private boolean isClickedToggle;
-    private boolean isClickable;
+    private boolean isVisible;
+    private boolean isRevealed;
 
-    public CardView(Card card) {
+    public CardView(Card card, int x, int y) {
         this.card = card;
 
-        isClickedToggle = false;
-        isClickable = true;
+        isVisible = true;
+        isRevealed = false;
 
-        imageView = new Image(card.getX(), card.getY(), card.getImagePath());
-        imageView.setWidth(card.getWidth());
-        imageView.setHeight(card.getHeight());
+        foreground = new Image(x, y, card.getImageFile().getPath());
+        foreground.setWidth(Config.CARD_WIDTH);
+        foreground.setHeight(Config.CARD_HEIGHT);
 
-        rectangleView = new Rectangle(card.getX(), card.getY(), card.getWidth(), card.getHeight(), Config.CARD_BACK_COLOR);
+        background = new Rectangle(x, y, Config.CARD_WIDTH, Config.CARD_HEIGHT, Config.CARD_BACK_COLOR);
     }
 
     public void draw() {
-        if(isClickable) {
-            show();
-        } else {
-            hide();
+        if(isVisible) {
+            drawCard();
         }
     }
 
-    private void show() {
-        if(isClickedToggle) {
-            imageView.draw();
+    private void drawCard(){
+        if(isRevealed){
+            foreground.draw();
         } else {
-            rectangleView.draw();
+            background.draw();
         }
-    }
-
-    public void hide() {
-        rectangleView.setColor(Config.APP_BACKGROUND_COLOR);
     }
 
     public boolean hitTest(int x, int y) {
-        return this.imageView.hitTest(x, y);
+        return this.foreground.hitTest(x, y);
     }
 
-    public void onClick() {
-        isClickedToggle = !isClickedToggle;
+    public void flip() {
+        isRevealed = !isRevealed;
     }
 
-    public boolean isToggled() {
-        return isClickedToggle;
+    /**
+     * Ist ein Paar gefunden (solved), wird die Karte unsichtbar gemacht.
+     */
+    public void solveCard(){
+        isVisible = false;
+        isRevealed = false;
     }
 
-    public void setToggle(boolean isToggled) {
-        isClickedToggle = isToggled;
+    public boolean isRevealed() {
+        return isRevealed;
     }
 
-    public void setClickable(boolean isClickable) {
-        this.isClickable = isClickable;
-    }
-
-    public boolean isClickable() {
-        return isClickable;
+    public void setRevealed(boolean isRevealed) {
+        this.isRevealed = isRevealed;
     }
 
     public Card getCard() {

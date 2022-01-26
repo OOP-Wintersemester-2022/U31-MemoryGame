@@ -8,6 +8,8 @@ public class Config {
 
     // App
     public static final Color APP_BACKGROUND_COLOR = new Color(255, 255, 255, 255);
+    public static final int APP_WIDTH = Config.BOARD_MARGIN_TO_CARDS * 2 + Config.BOARD_MARGIN_BETWEEN_CARDS * (Config.CARDS_PER_ROW - 1) + Config.CARDS_PER_ROW * Config.CARD_WIDTH;
+    public static final int APP_HEIGHT = Config.BOARD_MARGIN_TO_CARDS * 2 + Config.BOARD_MARGIN_BETWEEN_CARDS * (Config.NUM_CARD_ROWS - 1) + Config.NUM_CARD_ROWS * Config.CARD_HEIGHT;
 
     // Board
     public static final int BOARD_MARGIN_TO_CARDS = 10;
